@@ -19,12 +19,12 @@ function buildMetadata(sample) {
     // Inside a loop, you will need to use d3 to append new
     // tags for each key-value in the filtered metadata.
     
-    const filteredMetadata = Object.entries(metadata).filter(([key, value]) => typeof value === 'string');
+    const filteredMetadata = Object.entries(metadata).filter(([key, value]) => typeof value === 'obeject');
     filteredMetadata.forEach(([key, value]) => {
       PANEL.append("p")
           .text(`${key}: ${value}`);
   });
-    
+    console.log(filteredMetadata);
     });
 }
 
@@ -33,13 +33,27 @@ function buildCharts(sample) {
   d3.json("https://static.bc-edx.com/data/dl-1-2/m14/lms/starter/samples.json").then((data) => {
 
     // Get the samples field
-
+    let samples=data.samples;
+    console.log(samples);
 
     // Filter the samples for the object with the desired sample number
-
-
+   
+    const sortedItems = samples.sort((a, b) => b.sample_values - a.sample_values);
+    
+    const top10Items = sortedItems.slice(0, 10);
+    
+    console.log(top10Items);
+  
     // Get the otu_ids, otu_labels, and sample_values
-
+    function otuids(){
+      return top10Items.otu_ids;
+    };
+    function otulabels(){
+      return top10Items.otu_labels;
+    };
+    function sampleValues(){
+      return top10Items.sample_values;
+    }
 
     // Build a Bubble Chart
 
@@ -63,7 +77,9 @@ function buildCharts(sample) {
 function init() {
   d3.json("https://static.bc-edx.com/data/dl-1-2/m14/lms/starter/samples.json").then((data) => {
      let test = data.metadata;
+     let samples=data.samples;
      buildMetadata(test);
+     buildCharts(samples);
     // Get the names field
 
 
