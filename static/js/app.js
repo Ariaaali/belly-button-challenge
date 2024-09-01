@@ -45,18 +45,42 @@ function buildCharts(sample) {
     console.log(top10Items);
   
     // Get the otu_ids, otu_labels, and sample_values
-    function otuids(){
-      return top10Items.otu_ids;
-    };
-    function otulabels(){
-      return top10Items.otu_labels;
-    };
-    function sampleValues(){
-      return top10Items.sample_values;
-    }
+    let popluarOtuids = top10Items.map(function (row){
+      return row.otu_ids;
+    });
+    let popluarotu_labels = top10Items.map(function (row){
+      return row.otu_labels;
+    });
+    let popularsample_values = top10Items.map(function (row){
+      return row.sample_values;
+    });
+    
+    console.log(popluarotu_labels);
+    console.log(popularsample_values);
 
     // Build a Bubble Chart
-
+    let trace1 = {
+      x: popluarOtuids,
+      y: popularsample_values,
+      text:popluarotu_labels,
+      mode: 'markers',
+      marker: {
+        color: popluarotu_labels,
+        opacity: [1, 0.8, 0.6, 0.4],
+        size: popularsample_values
+      }
+    };
+    
+    let bubledata = [trace1];
+    
+    var layout = {
+      title: 'Bacteria Cluture Per Sample',
+      showlegend: false,
+      height: 600,
+      width: 600
+    };
+    
+    Plotly.newPlot('#bubble', bubledata, layout);
 
     // Render the Bubble Chart
 
