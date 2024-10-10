@@ -6,8 +6,10 @@ function buildMetadata(sample) {
     let metadata = data.metadata;
     console.log(metadata);
 
-   
-  
+    let sampleMetadata = metadata.filter(meta => meta.id == sample)[0];
+        console.log(sampleMetadata);
+    let keys = Object.keys(sampleMetadata);
+    let values = Object.values(sampleMetadata);
     // Use d3 to select the panel with id of `#sample-metadata`
     let PANEL=d3.select("#sample-metadata")
 
@@ -18,15 +20,18 @@ function buildMetadata(sample) {
 
     // Inside a loop, you will need to use d3 to append new
     // tags for each key-value in the filtered metadata.
-    
-    const filteredMetadata = Object.entries(metadata).filter(([key, value]) => typeof value === 'obeject');
-    filteredMetadata.forEach(([key, value]) => {
-      PANEL.append("p")
-          .text(`${key}: ${value}`);
+    for (let i = 0; i < keys.length; i++) { //looping over arrays
+      metadataPanel.append("div").html(`${keys[i].toUpperCase()}: ${values[i]}`); //used regex to make uppercase
+      // console.log(keys[i]);
+      // console.log(values[i]);
+    };
+
+    // Update styling of metadata panel
+    d3.select(".card-header").style("background-color", "steelblue");
+    d3.select(".card-title").style("color", "white");
   });
-    console.log(filteredMetadata);
-    });
 }
+
 
 // function to build both charts
 function buildCharts(sample) {
@@ -36,92 +41,76 @@ function buildCharts(sample) {
     let samples=data.samples;
     console.log(samples);
 
-    // Filter the samples for the object with the desired sample number
-   
-    const sortedItems = samples.sort((a, b) => b.sample_values - a.sample_values);
-    
-    const top10Items = sortedItems.slice(0, 10);
-    
-    console.log(top10Items);
+    // Filter (with custom function) the samples for the object with the desired sample number
+    function matchId(choice) {
+      return choice.id == sample;
+      }  
+      let sampleData = samples.filter(matchId)[0];
+      console.log(sampleData);
   
-    // Get the otu_ids, otu_labels, and sample_values
-    let popluarOtuids = top10Items.map(function (row){
-      return row.otu_ids;
+      // Get the otu_ids, otu_labels, and sample_values
+      let top10samplesValues = sampleData.sample_values.slice(0, 10).reverse();
+      let top10otuIds = sampleData.otu_ids.slice(0, 10);
+      let top10otuLabels = sampleData.otu_labels.slice(0, 10);
+  
+      // Build a Bubble Chart
+      let trace2 = {
+        x: top10otuIds,
+        y: top10samplesValues,
+        text: top10otuLabels,
+        mode: 'markers',
+        marker: {
+          size: top10samplesValues,
+          color: top10otuIds,
+          colorscale: 'Viridis' }
+        };
+  
+      // Data Array
+      let bubbleData = [trace2]
+  
+      // Layout object
+      let layout2 = {
+        title: "Bacteria Cultures Per Sample",
+        xaxis: { title: 'OTU ID' },
+        yaxis: { title: 'Number of Bacteria' },
+        margin: {
+          l: 50,
+          r: 5,
+          t: 100,
+          b: 100}};
+  
+      // Render the Bubble Chart
+      Plotly.newPlot("bubble", bubbleData, layout2);
+  
+      // For the Bar Chart, map the otu_ids to a list of strings for your yticks
+      // Build a Bar Chart
+      // Don't forget to slice and reverse the input data appropriately
+      let trace1 = {
+        x: top10samplesValues,
+        y: top10otuIds.map(id => `OTU ${id} `),
+        text: top10otuLabels, //hover text
+        type: "bar",
+        orientation: "h"};
+  
+      // Data Array
+      let barData = [trace1];
+  
+      // Layout object
+      let layout1 = {
+        title: "Top 10 Bacteria Cultures Found",
+        xaxis: { title: 'Number of Bacteria' },
+  
+        margin: {
+          l: 80,
+          r: 0,
+          t: 50,
+          b: 50}};
+  
+      // Render the Bar Chart
+      Plotly.newPlot("bar", barData, layout1);
     });
-    let popluarotu_labels = top10Items.map(function (row){
-      return row.otu_labels;
-    });
-    let popularsample_values = top10Items.map(function (row){
-      return row.sample_values;
-    });
-    
-    console.log(popluarotu_labels);
-    console.log(popularsample_values);
+  }
 
-    // Build a Bubble Chart
-    let trace1 = {
-      x: popluarOtuids,
-      y: popularsample_values,
-      text:popluarotu_labels,
-      mode: 'markers',
-      marker: {
-        color: popluarotu_labels,
-        opacity: [1, 0.8, 0.6, 0.4],
-        size: popularsample_values
-      }
-    };
-    
-    let bubledata = [trace1];
-    
-    var layout = {
-      title: 'Bacteria Cluture Per Sample',
-      showlegend: false,
-      height: 600,
-      width: 600
-    };
-    
-    Plotly.newPlot('#bubble', bubledata, layout);
-
-    // Render the Bubble Chart
-
-
-    // For the Bar Chart, map the otu_ids to a list of strings for your yticks
-
-
-    // Build a Bar Chart
-    // Don't forget to slice and reverse the input data appropriately
-
-
-    // Render the Bar Chart
-
-  });
-}
-
-// Function to run on page load
-function init() {
-  d3.json("https://static.bc-edx.com/data/dl-1-2/m14/lms/starter/samples.json").then((data) => {
-     let test = data.metadata;
-     let samples=data.samples;
-     buildMetadata(test);
-     buildCharts(samples);
-    // Get the names field
-
-
-    // Use d3 to select the dropdown with id of `#selDataset`
-
-
-    // Use the list of sample names to populate the select options
-    // Hint: Inside a loop, you will need to use d3 to append a new
-    // option for each sample name.
-
-
-    // Get the first sample from the list
-
-
-    // Build charts and metadata panel with the first sample
-
-  });
-}
 
 // Function for event listener
 function optionChanged(newSample) { 
@@ -129,5 +118,43 @@ function optionChanged(newSample) {
   buildMetadata(newSample);
 }
 
+function init() {
+  d3.json("https://static.bc-edx.com/data/dl-1-2/m14/lms/starter/samples.json").then((data) => {
+
+    // Get the names field
+    let names = data.names;
+
+    // Use d3 to select the dropdown with id of `#selDataset`
+    let dropdownMenu = d3.select("#selDataset")
+
+    // Use the list of sample names to populate the select options
+    // Hint: Inside a loop, you will need to use d3 to append a new
+    // option for each sample name.
+    for (let i = 0; i < names.length; i++) { //looping over array
+      dropdownMenu.append("option").text(names[i]);
+    };
+
+    // update text of header of dropdown menu
+    let header = d3.select(".card.card-body.bg-light h6");
+    header.text("Test Subject ID No:");
+    
+    // Get the first sample from the list
+    let sample = names[0];
+    console.log(sample);
+
+    // Build charts and metadata panel with the first sample
+    buildCharts(sample);
+    buildMetadata(sample);
+  });
+}
+
+  // Function for event listener
+  function optionChanged(newSample) {
+    // Build charts and metadata panel each time a new sample is selected
+    buildCharts(newSample);
+    buildMetadata(newSample);
+  }
+
 // Initialise the dashboard
 init();
+
